@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>自炊ログ | 週の木</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F5EFE3;
+    --paper:#FFFCF5;
+    --wood-light:#E6D3AE;
+    --wood:#B78A56;
+    --wood-dark:#5E4632;
+    --ink:#3C3229;
+    --ink-soft:#8A7C6C;
+    --sage:#7E9B6E;
+    --sage-soft:#E4EBDD;
+    --clay:#BD7A52;
+    --clay-soft:#F3E2D3;
+    --gold:#C79A3B;
+    --line:#E3D6BE;
+    --danger:#B5583F;
+    --radius:18px;
+    --radius-sm:12px;
+    --shadow: 0 6px 20px rgba(94,70,50,0.10);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Noto Sans JP',sans-serif;
+    background:
+      radial-gradient(ellipse at top, #FAF5EA 0%, var(--cream) 55%);
+    color:var(--ink);
+    min-height:100vh;
+    padding-bottom:86px;
+  }
+  h1,h2,h3,.display{font-family:'Zen Maru Gothic',sans-serif;}
+  ::selection{background:var(--wood-light);}
+  button{font-family:inherit;}
+  input,textarea,select{font-family:inherit;}
+
+  /* ---------- Header ---------- */
+  .app-header{
+    padding:22px 20px 14px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+  }
+  .app-header .brand{
+    font-family:'Zen Maru Gothic',sans-serif;
+    font-weight:900;
+    font-size:22px;
+    color:var(--wood-dark);
+    letter-spacing:.02em;
+  }
+  .app-header .brand small{
+    display:block;
+    font-family:'Noto Sans JP',sans-serif;
+    font-weight:400;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  .app-header .today{
+    font-size:13px;
+    color:var(--ink-soft);
+    text-align:right;
+  }
+
+  /* ---------- Layout ---------- */
+  .view{ display:none; padding:0 18px 28px; animation:fadeIn .28s ease; }
+  .view.active{ display:block; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    box-shadow:var(--shadow);
+    margin-bottom:16px;
+  }
+
+  /* ---------- Memo / purpose card ---------- */
+  .memo-card{
+    background:linear-gradient(160deg, var(--wood-light) 0%, var(--wood) 130%);
+    color:#fff;
+    border:none;
+    position:relative;
+    overflow:hidden;
+  }
+  .memo-card::before{
+    content:"";
+    position:absolute; right:-30px; top:-30px;
+    width:130px; height:130px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.08);
+  }
+  .memo-card h2{
+    margin:0 0 10px; font-size:15px; letter-spacing:.03em;
+    display:flex; align-items:center; gap:8px;
+  }
+  .memo-card ol{ margin:0; padding-left:20px; font-size:13.5px; line-height:1.75; }
+  .memo-card ol li{ margin-bottom:4px; }
+  .memo-toggle{
+    background:none; border:none; color:rgba(255,255,255,.85);
+    font-size:12px; text-decoration:underline; padding:8px 0 0; cursor:pointer;
+  }
+  .memo-body.collapsed{ display:none; }
+
+  /* ---------- Ring ---------- */
+  .ring-section{ text-align:center; }
+  .ring-wrap{ position:relative; width:190px; height:190px; margin:6px auto 8px; }
+  .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-track{ fill:none; stroke:var(--wood-light); stroke-width:14; }
+  .ring-bar{
+    fill:none; stroke:var(--sage); stroke-width:14; stroke-linecap:round;
+    transition:stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1), stroke .4s ease;
+  }
+  .ring-wrap.is-star .ring-bar{ stroke:var(--gold); }
+  .ring-center{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .ring-center .num{ font-family:'Zen Maru Gothic',sans-serif; font-weight:900; font-size:34px; color:var(--wood-dark); }
+  .ring-center .star{ font-size:46px; display:none; animation:pop .5s cubic-bezier(.2,1.4,.4,1); }
+  .ring-wrap.is-star .ring-center .num{ display:none; }
+  .ring-wrap.is-star .ring-center .star{ display:block; }
+  .ring-center .sub{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+  @keyframes pop{ 0%{transform:scale(.3); opacity:0;} 60%{transform:scale(1.15); opacity:1;} 100%{transform:scale(1);} }
+
+  .quota-row{ display:flex; gap:10px; justify-content:center; margin-top:8px; }
+  .quota-pill{
+    flex:1; max-width:150px;
+    background:var(--cream); border:1px solid var(--line);
+    border-radius:999px; padding:7px 12px; font-size:12px; color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .quota-pill .dot{ width:8px; height:8px; border-radius:50%; }
+  .quota-pill.done{ color:var(--ink); font-weight:700; }
+
+  .log-buttons{ display:flex; gap:10px; margin-top:18px; }
+  .btn{
+    border:none; border-radius:999px; padding:13px 16px;
+    font-weight:700; font-size:14px; cursor:pointer;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .btn:active{ transform:scale(.96); }
+  .btn-block{ width:100%; }
+  .btn-primary{ background:var(--wood-dark); color:#fff; }
+  .btn-sage{ background:var(--sage); color:#fff; }
+  .btn-clay{ background:var(--clay); color:#fff; }
+  .btn-ghost{ background:var(--cream); color:var(--wood-dark); border:1px solid var(--line); }
+  .btn-outline{ background:transparent; color:var(--wood-dark); border:1.5px solid var(--wood-dark); }
+  .btn-sm{ padding:8px 12px; font-size:12.5px; }
+  .btn[disabled]{ opacity:.45; pointer-events:none; }
+
+  /* ---------- Section titles ---------- */
+  .section-title{
+    font-size:14px; font-weight:700; color:var(--wood-dark);
+    margin:22px 0 10px; display:flex; align-items:center; justify-content:space-between;
+  }
+
+  /* ---------- Recent log list ---------- */
+  .log-item{
+    display:flex; align-items:center; gap:12px;
+    padding:11px 4px; border-bottom:1px solid var(--line);
+  }
+  .log-item:last-child{ border-bottom:none; }
+  .log-badge{
+    width:34px; height:34px; border-radius:10px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+  }
+  .log-badge.zubora{ background:var(--sage-soft); }
+  .log-badge.chanto{ background:var(--clay-soft); }
+  .log-info{ flex:1; min-width:0; }
+  .log-info .name{ font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .log-info .meta{ font-size:11.5px; color:var(--ink-soft); }
+  .log-del{ background:none; border:none; color:var(--ink-soft); font-size:16px; cursor:pointer; padding:4px 6px; }
+  .empty-hint{ text-align:center; color:var(--ink-soft); font-size:13px; padding:20px 8px; }
+
+  /* ---------- Tabs (stat toggle / etc) ---------- */
+  .seg{
+    display:flex; background:var(--cream); border-radius:999px; padding:4px;
+    border:1px solid var(--line); margin-bottom:16px;
+  }
+  .seg button{
+    flex:1; border:none; background:none; padding:9px 6px; border-radius:999px;
+    font-size:12.5px; font-weight:700; color:var(--ink-soft); cursor:pointer;
+  }
+  .seg button.active{ background:var(--wood-dark); color:#fff; }
+
+  /* ---------- Bar chart ---------- */
+  .chart{
+    display:flex; align-items:flex-end; gap:10px;
+    height:180px; padding:10px 4px 0;
+  }
+  .chart-col{ flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; }
+  .bar-stack{ width:100%; max-width:34px; display:flex; flex-direction:column-reverse; border-radius:8px 8px 4px 4px; overflow:hidden; background:var(--wood-light); }
+  .bar-seg{ width:100%; }
+  .bar-seg.zubora{ background:var(--sage); }
+  .bar-seg.chanto{ background:var(--clay); }
+  .bar-seg.rate{ background:linear-gradient(180deg, var(--gold), var(--wood)); }
+  .chart-col .lbl{ font-size:10.5px; color:var(--ink-soft); margin-top:8px; text-align:center; line-height:1.3; }
+  .chart-col .val{ font-size:10.5px; color:var(--wood-dark); font-weight:700; margin-bottom:4px; }
+  .legend{ display:flex; gap:16px; justify-content:center; margin-top:6px; font-size:12px; color:var(--ink-soft); }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .legend i{ width:9px; height:9px; border-radius:3px; display:inline-block; }
+
+  .stat-summary{ display:flex; gap:10px; margin-bottom:4px; }
+  .stat-box{ flex:1; background:var(--cream); border-radius:var(--radius-sm); padding:12px; text-align:center; }
+  .stat-box .n{ font-family:'Zen Maru Gothic',sans-serif; font-weight:900; font-size:22px; color:var(--wood-dark); }
+  .stat-box .t{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+
+  /* ---------- Recipes ---------- */
+  .recipe-filter{ display:flex; gap:8px; margin-bottom:14px; }
+  .chip{
+    border:1px solid var(--line); background:var(--paper); border-radius:999px;
+    padding:7px 14px; font-size:12.5px; color:var(--ink-soft); cursor:pointer; font-weight:700;
+  }
+  .chip.active{ background:var(--wood-dark); color:#fff; border-color:var(--wood-dark); }
+  .recipe-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-sm);
+    padding:14px; margin-bottom:10px;
+  }
+  .recipe-card .rc-head{ display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .recipe-card .tag{ font-size:10.5px; padding:3px 9px; border-radius:999px; font-weight:700; flex-shrink:0; }
+  .tag.zubora{ background:var(--sage-soft); color:#4C6942; }
+  .tag.chanto{ background:var(--clay-soft); color:#8C4A2A; }
+  .recipe-card .rc-name{ font-weight:700; font-size:14.5px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .recipe-card .rc-arrow{ color:var(--ink-soft); transition:transform .2s; font-size:12px; }
+  .recipe-card.open .rc-arrow{ transform:rotate(90deg); }
+  .rc-detail{ display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); font-size:13px; }
+  .recipe-card.open .rc-detail{ display:block; }
+  .rc-detail h4{ margin:0 0 6px; font-size:12px; color:var(--wood-dark); }
+  .rc-detail ul{ margin:0 0 12px; padding-left:18px; line-height:1.7; }
+  .rc-detail ol{ margin:0 0 12px; padding-left:18px; line-height:1.7; }
+  .rc-actions{ display:flex; gap:8px; }
+
+  /* ---------- AI ---------- */
+  .ai-sub{ font-size:12px; color:var(--ink-soft); margin:0 0 14px; line-height:1.6; }
+  .chat-window{
+    height:280px; overflow-y:auto; background:var(--cream); border-radius:var(--radius-sm);
+    padding:12px; display:flex; flex-direction:column; gap:10px; margin-bottom:12px;
+  }
+  .bubble{ max-width:82%; padding:10px 13px; border-radius:14px; font-size:13px; line-height:1.6; white-space:pre-wrap; }
+  .bubble.user{ align-self:flex-end; background:var(--wood-dark); color:#fff; border-bottom-right-radius:4px; }
+  .bubble.ai{ align-self:flex-start; background:var(--paper); border:1px solid var(--line); border-bottom-left-radius:4px; }
+  .bubble.ai.loading{ color:var(--ink-soft); font-style:italic; }
+  .chat-input-row{ display:flex; gap:8px; }
+  .chat-input-row textarea{
+    flex:1; resize:none; border:1px solid var(--line); border-radius:var(--radius-sm);
+    padding:10px 12px; font-size:13.5px; background:var(--paper); color:var(--ink); height:44px;
+  }
+  .gen-preview{ background:var(--sage-soft); border-radius:var(--radius-sm); padding:14px; margin-top:14px; }
+  .gen-preview h4{ margin:0 0 8px; font-size:13.5px; color:#4C6942; }
+
+  /* ---------- Settings ---------- */
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; color:var(--ink-soft); margin-bottom:5px; font-weight:700; }
+  .field input{
+    width:100%; border:1px solid var(--line); border-radius:var(--radius-sm);
+    padding:11px 12px; font-size:13.5px; background:var(--paper); color:var(--ink);
+  }
+  .field .hint{ font-size:11px; color:var(--ink-soft); margin-top:4px; }
+  .sync-status{ font-size:12px; color:var(--ink-soft); margin-top:8px; min-height:16px; }
+  .divider{ height:1px; background:var(--line); margin:20px 0; }
+
+  /* ---------- Bottom nav ---------- */
+  .tabbar{
+    position:fixed; left:0; right:0; bottom:0;
+    background:rgba(255,252,245,0.92); backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);
+    display:flex; padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    z-index:50;
+  }
+  .tabbar button{
+    flex:1; background:none; border:none; display:flex; flex-direction:column;
+    align-items:center; gap:3px; padding:6px 2px; cursor:pointer; color:var(--ink-soft);
+  }
+  .tabbar button .ic{ font-size:19px; }
+  .tabbar button .lb{ font-size:10px; font-weight:700; }
+  .tabbar button.active{ color:var(--wood-dark); }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(60,50,41,0.42);
+    display:none; align-items:flex-end; justify-content:center; z-index:100;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal-sheet{
+    background:var(--paper); width:100%; max-width:480px;
+    border-radius:24px 24px 0 0; padding:22px 20px calc(22px + env(safe-area-inset-bottom));
+    max-height:86vh; overflow-y:auto;
+    animation:slideUp .25s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes slideUp{ from{transform:translateY(100%);} to{transform:translateY(0);} }
+  .modal-sheet h3{ margin:0 0 16px; font-size:16px; color:var(--wood-dark); }
+  .modal-close-row{ display:flex; justify-content:flex-end; margin-bottom:-6px; }
+  .modal-close-row button{ background:none; border:none; font-size:20px; color:var(--ink-soft); cursor:pointer; }
+  textarea.multiline{
+    width:100%; border:1px solid var(--line); border-radius:var(--radius-sm);
+    padding:10px 12px; font-size:13.5px; background:var(--cream); min-height:80px; resize:vertical;
+  }
+  .toast{
+    position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(10px);
+    background:var(--wood-dark); color:#fff; padding:10px 18px; border-radius:999px;
+    font-size:12.5px; opacity:0; pointer-events:none; transition:all .3s ease; z-index:200;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="brand">自炊ログ<small>週の木 — Weekly Kitchen</small></div>
+  <div class="today" id="todayLabel"></div>
+</div>
+
+<!-- ============ HOME ============ -->
+<section class="view active" id="view-home">
+
+  <div class="card memo-card">
+    <h2>🌱 このアプリの目的</h2>
+    <button class="memo-toggle" id="memoToggleBtn">たたむ</button>
+    <div class="memo-body" id="memoBody">
+      <ol>
+        <li>お金の節約と、自炊習慣の定着。</li>
+        <li>基本は一人暮らし用の冷凍作り置き（ズボラ自炊で効率化）でOK。</li>
+        <li>でも将来の自分のために、新しいレシピや「ちゃんとした料理」の引き出しも増やす。将来の家族に何もできない状態を避けるための先行投資！</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card ring-section">
+    <div class="ring-wrap" id="ringWrap">
+      <svg viewBox="0 0 190 190">
+        <circle class="ring-track" cx="95" cy="95" r="80"></circle>
+        <circle class="ring-bar" id="ringBar" cx="95" cy="95" r="80"></circle>
+      </svg>
+      <div class="ring-center">
+        <div class="num" id="ringNum">0/3</div>
+        <div class="star">★</div>
+        <div class="sub" id="ringSub">今週の自炊</div>
+      </div>
+    </div>
+    <div class="quota-row">
+      <div class="quota-pill" id="pillZubora"><span class="dot" style="background:var(--sage)"></span><span>ズボラ 0/2</span></div>
+      <div class="quota-pill" id="pillChanto"><span class="dot" style="background:var(--clay)"></span><span>ちゃんと 0/1</span></div>
+    </div>
+    <div class="log-buttons">
+      <button class="btn btn-sage btn-block" onclick="openLogModal('zubora')">＋ ズボラ自炊</button>
+      <button class="btn btn-clay btn-block" onclick="openLogModal('chanto')">＋ ちゃんと料理</button>
+    </div>
+  </div>
+
+  <div class="section-title">最近の記録</div>
+  <div class="card" id="recentLogCard" style="padding:6px 14px;"></div>
+</section>
+
+<!-- ============ STATS ============ -->
+<section class="view" id="view-stats">
+  <div class="seg">
+    <button class="active" data-stat="rate" onclick="switchStatTab('rate')">週別達成率</button>
+    <button data-stat="breakdown" onclick="switchStatTab('breakdown')">内訳カウント</button>
+  </div>
+
+  <div class="card">
+    <div class="stat-summary">
+      <div class="stat-box"><div class="n" id="statTotal">0</div><div class="t">今月の自炊回数</div></div>
+      <div class="stat-box"><div class="n" id="statAchieved">0</div><div class="t">今月の目標達成週</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="chart" id="statChart"></div>
+    <div class="legend" id="statLegend"></div>
+  </div>
+</section>
+
+<!-- ============ RECIPES ============ -->
+<section class="view" id="view-recipes">
+  <div class="recipe-filter">
+    <button class="chip active" data-cat="all" onclick="filterRecipes('all')">すべて</button>
+    <button class="chip" data-cat="zubora" onclick="filterRecipes('zubora')">ズボラ</button>
+    <button class="chip" data-cat="chanto" onclick="filterRecipes('chanto')">ちゃんと</button>
+  </div>
+  <button class="btn btn-primary btn-block" style="margin-bottom:14px;" onclick="openRecipeModal()">＋ レシピを追加</button>
+  <div id="recipeList"></div>
+</section>
+
+<!-- ============ AI ============ -->
+<section class="view" id="view-ai">
+  <div class="card">
+    <h3 style="margin:0 0 6px;font-size:15px;color:var(--wood-dark);">🤖 AIレシピ相談</h3>
+    <p class="ai-sub">Gemini APIキーは「設定」タブで登録してください。食材や気分を伝えると、ズボラ or ちゃんとレシピを提案してくれます。</p>
+    <div class="chat-window" id="chatWindow"></div>
+    <div class="chat-input-row">
+      <textarea id="chatInput" placeholder="例：鶏むね肉と冷凍ブロッコリーで、ズボラ向けのレシピ考えて"></textarea>
+      <button class="btn btn-primary" style="align-self:flex-end;" onclick="sendChat()">送信</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 6px;font-size:15px;color:var(--wood-dark);">⚡ 食材からレシピ自動登録</h3>
+    <p class="ai-sub">食材やキーワードを入れると、レシピを自動生成してそのままレシピ帳に登録できます。</p>
+    <div class="chat-input-row">
+      <textarea id="genInput" placeholder="例：鮭の切り身、玉ねぎ、卵 / ちゃんとレシピで"></textarea>
+      <button class="btn btn-clay" style="align-self:flex-end;" onclick="generateRecipe()">生成</button>
+    </div>
+    <div id="genResult"></div>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section class="view" id="view-settings">
+  <div class="card">
+    <h3 style="margin:0 0 14px;font-size:15px;color:var(--wood-dark);">☁️ GitHub Gist 同期</h3>
+    <div class="field">
+      <label>Personal Access Token（PAT）</label>
+      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
+    </div>
+    <div class="field">
+      <label>Gist ID</label>
+      <input type="text" id="ghGistId" placeholder="例：a1b2c3d4e5f6...">
+      <div class="hint">空のGistを1つ作成し、そのIDを入力してください。Gist内容は上書きされます。</div>
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-outline btn-block" onclick="loadFromGist()">Gistから読込</button>
+      <button class="btn btn-primary btn-block" onclick="saveToGist()">Gistへ保存</button>
+    </div>
+    <div class="sync-status" id="syncStatus"></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 14px;font-size:15px;color:var(--wood-dark);">🔮 Gemini API</h3>
+    <div class="field">
+      <label>Gemini APIキー</label>
+      <input type="password" id="geminiKey" placeholder="AIzaSy...">
+    </div>
+    <div class="field">
+      <label>モデル名</label>
+      <input type="text" id="geminiModel" placeholder="gemini-2.5-flash">
+      <div class="hint">エラーが出る場合はGoogle AI Studioで現在使えるモデル名を確認して変更してください。</div>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="saveApiSettings()">保存する</button>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 10px;font-size:15px;color:var(--wood-dark);">⚠️ データ管理</h3>
+    <button class="btn btn-ghost btn-block" onclick="resetAllData()" style="color:var(--danger);">すべてのデータを削除する</button>
+  </div>
+</section>
+
+<div class="tabbar">
+  <button class="active" data-view="home" onclick="switchView('home')"><span class="ic">🏠</span><span class="lb">ホーム</span></button>
+  <button data-view="stats" onclick="switchView('stats')"><span class="ic">📊</span><span class="lb">統計</span></button>
+  <button data-view="recipes" onclick="switchView('recipes')"><span class="ic">📖</span><span class="lb">レシピ</span></button>
+  <button data-view="ai" onclick="switchView('ai')"><span class="ic">🤖</span><span class="lb">AI</span></button>
+  <button data-view="settings" onclick="switchView('settings')"><span class="ic">⚙️</span><span class="lb">設定</span></button>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-sheet" id="modalSheet"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   自炊ログ — 単一ファイル完結アプリ
+   ========================================================= */
+
+const STORAGE_KEY = 'sukuApp_v1';
+
+let state = loadState();
+
+function defaultState(){
+  return {
+    sessions: [],   // {id, date:'YYYY-MM-DD', type:'zubora'|'chanto', name, memo}
+    recipes: [],    // {id, name, category:'zubora'|'chanto', ingredients:[], steps:[], memo, createdAt}
+    settings: { ghToken:'', ghGistId:'', geminiKey:'', geminiModel:'gemini-2.5-flash' },
+    chatHistory: [] // {role:'user'|'model', text}
+  };
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    return Object.assign(defaultState(), parsed);
+  }catch(e){
+    return defaultState();
+  }
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+/* ---------- date helpers (Sunday start) ---------- */
+function fmtDate(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function parseDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function startOfWeek(d){
+  const dt=new Date(d); dt.setHours(0,0,0,0);
+  dt.setDate(dt.getDate()-dt.getDay());
+  return dt;
+}
+function addDays(d,n){ const nd=new Date(d); nd.setDate(nd.getDate()+n); return nd; }
+function weekLabel(start){
+  const end=addDays(start,6);
+  return `${start.getMonth()+1}/${start.getDate()}`;
+}
+function sessionsInRange(start,end){
+  const s=fmtDate(start), e=fmtDate(end);
+  return state.sessions.filter(x=>x.date>=s && x.date<=e);
+}
+function weekStats(weekStart){
+  const list = sessionsInRange(weekStart, addDays(weekStart,6));
+  const zubora = list.filter(x=>x.type==='zubora').length;
+  const chanto = list.filter(x=>x.type==='chanto').length;
+  const progress = Math.min(zubora,2)+Math.min(chanto,1);
+  const achieved = zubora>=2 && chanto>=1;
+  return {zubora, chanto, progress, achieved, percent: Math.min(100, progress/3*100)};
+}
+
+/* =========================================================
+   VIEW SWITCHING
+   ========================================================= */
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  if(name==='stats') renderStats();
+  if(name==='recipes') renderRecipes();
+  if(name==='ai') renderChat();
+}
+
+/* =========================================================
+   HOME: ring + recent log
+   ========================================================= */
+const RING_R = 80, RING_C = 2*Math.PI*80;
+
+function renderHome(){
+  document.getElementById('todayLabel').textContent =
+    new Date().toLocaleDateString('ja-JP',{month:'numeric',day:'numeric',weekday:'short'});
+
+  const ws = startOfWeek(new Date());
+  const st = weekStats(ws);
+
+  const ringBar = document.getElementById('ringBar');
+  ringBar.setAttribute('stroke-dasharray', RING_C);
+  ringBar.setAttribute('stroke-dashoffset', RING_C*(1-st.percent/100));
+  document.getElementById('ringNum').textContent = `${st.progress}/3`;
+  document.getElementById('ringWrap').classList.toggle('is-star', st.achieved);
+
+  document.getElementById('pillZubora').classList.toggle('done', st.zubora>=2);
+  document.getElementById('pillZubora').querySelector('span:last-child').textContent = `ズボラ ${Math.min(st.zubora,2)}/2`;
+  document.getElementById('pillChanto').classList.toggle('done', st.chanto>=1);
+  document.getElementById('pillChanto').querySelector('span:last-child').textContent = `ちゃんと ${Math.min(st.chanto,1)}/1`;
+
+  renderRecentLog();
+}
+
+function renderRecentLog(){
+  const wrap = document.getElementById('recentLogCard');
+  const list = [...state.sessions].sort((a,b)=> b.date.localeCompare(a.date) || b.id.localeCompare(a.id)).slice(0,8);
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-hint">まだ記録がありません。今週の1品目を記録してみましょう。</div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(item=>{
+    const icon = item.type==='zubora' ? '🧊' : '🍳';
+    const label = item.type==='zubora' ? 'ズボラ自炊' : 'ちゃんと料理';
+    const d = parseDate(item.date);
+    const dLabel = `${d.getMonth()+1}/${d.getDate()}`;
+    return `<div class="log-item">
+      <div class="log-badge ${item.type}">${icon}</div>
+      <div class="log-info">
+        <div class="name">${escapeHtml(item.name || label)}</div>
+        <div class="meta">${dLabel}・${label}</div>
+      </div>
+      <button class="log-del" onclick="deleteSession('${item.id}')">×</button>
+    </div>`;
+  }).join('');
+}
+
+function deleteSession(id){
+  state.sessions = state.sessions.filter(s=>s.id!==id);
+  saveState();
+  renderHome();
+}
+
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('memoToggleBtn').addEventListener('click', ()=>{
+  const body = document.getElementById('memoBody');
+  const collapsed = body.classList.toggle('collapsed');
+  document.getElementById('memoToggleBtn').textContent = collapsed ? '開く' : 'たたむ';
+});
+
+/* =========================================================
+   LOG MODAL
+   ========================================================= */
+function openLogModal(type){
+  const today = fmtDate(new Date());
+  const label = type==='zubora' ? 'ズボラ自炊' : 'ちゃんとした料理';
+  const recipeOptions = state.recipes.filter(r=>r.category===type)
+    .map(r=>`<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join('');
+  showModal(`
+    <h3>${label}を記録</h3>
+    <div class="field">
+      <label>日付</label>
+      <input type="date" id="logDate" value="${today}">
+    </div>
+    <div class="field">
+      <label>メニュー名</label>
+      <input type="text" id="logName" list="recipeSuggest" placeholder="例：鶏むね肉と大豆のトマト煮込み">
+      <datalist id="recipeSuggest">${recipeOptions}</datalist>
+    </div>
+    <div class="field">
+      <label>メモ（任意）</label>
+      <textarea class="multiline" id="logMemo" placeholder="味の感想や次回の改善点など"></textarea>
+    </div>
+    <button class="btn ${type==='zubora'?'btn-sage':'btn-clay'} btn-block" onclick="submitLog('${type}')">記録する</button>
+  `);
+}
+function submitLog(type){
+  const date = document.getElementById('logDate').value || fmtDate(new Date());
+  const name = document.getElementById('logName').value.trim();
+  const memo = document.getElementById('logMemo').value.trim();
+  state.sessions.push({id:uid(), date, type, name, memo});
+  saveState();
+  closeModal();
+  renderHome();
+  showToast(type==='zubora' ? 'ズボラ自炊を記録しました 🧊' : 'ちゃんとした料理を記録しました 🍳');
+}
+
+/* =========================================================
+   STATS
+   ========================================================= */
+let statTab = 'rate';
+function switchStatTab(tab){
+  statTab = tab;
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('active', b.dataset.stat===tab));
+  renderStats();
+}
+function renderStats(){
+  const now = new Date();
+  const thisMonth = now.getMonth(), thisYear = now.getFullYear();
+  const monthSessions = state.sessions.filter(s=>{
+    const d = parseDate(s.date);
+    return d.getMonth()===thisMonth && d.getFullYear()===thisYear;
+  });
+  document.getElementById('statTotal').textContent = monthSessions.length;
+
+  // build last 5 weeks (oldest -> newest), current week last
+  const weeks = [];
+  let cursor = startOfWeek(now);
+  for(let i=4;i>=0;i--){ weeks.push(addDays(cursor, -7*i)); }
+
+  const achievedCount = weeks.filter(w=>weekStats(w).achieved).length;
+  document.getElementById('statAchieved').textContent = achievedCount;
+
+  const chart = document.getElementById('statChart');
+  const legend = document.getElementById('statLegend');
+
+  if(statTab==='rate'){
+    chart.innerHTML = weeks.map(w=>{
+      const st = weekStats(w);
+      const h = Math.max(6, st.percent);
+      return `<div class="chart-col">
+        <div class="val">${Math.round(st.percent)}%</div>
+        <div class="bar-stack" style="height:${h}%;"><div class="bar-seg rate" style="height:100%;"></div></div>
+        <div class="lbl">${weekLabel(w)}${st.achieved?' ★':''}</div>
+      </div>`;
+    }).join('');
+    legend.innerHTML = `<span><i style="background:linear-gradient(180deg,var(--gold),var(--wood));"></i>週の達成率</span>`;
+  } else {
+    const maxCount = Math.max(3, ...weeks.map(w=>{ const s=weekStats(w); return s.zubora+s.chanto; }));
+    chart.innerHTML = weeks.map(w=>{
+      const st = weekStats(w);
+      const total = st.zubora + st.chanto;
+      const totalH = Math.max(6, total/maxCount*100);
+      const zH = total? (st.zubora/total*totalH) : 0;
+      const cH = total? (st.chanto/total*totalH) : 0;
+      return `<div class="chart-col">
+        <div class="val">${total}</div>
+        <div class="bar-stack" style="height:${totalH}%;">
+          <div class="bar-seg zubora" style="height:${total?zH/totalH*100:0}%;"></div>
+          <div class="bar-seg chanto" style="height:${total?cH/totalH*100:0}%;"></div>
+        </div>
+        <div class="lbl">${weekLabel(w)}</div>
+      </div>`;
+    }).join('');
+    legend.innerHTML = `<span><i style="background:var(--sage);"></i>ズボラ</span><span><i style="background:var(--clay);"></i>ちゃんと</span>`;
+  }
+}
+
+/* =========================================================
+   RECIPES
+   ========================================================= */
+let recipeFilter = 'all';
+function filterRecipes(cat){
+  recipeFilter = cat;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c.dataset.cat===cat));
+  renderRecipes();
+}
+function renderRecipes(){
+  const wrap = document.getElementById('recipeList');
+  let list = [...state.recipes].sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+  if(recipeFilter!=='all') list = list.filter(r=>r.category===recipeFilter);
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-hint">レシピがまだありません。「＋レシピを追加」またはAIタブで生成してみましょう。</div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(r=>{
+    const catLabel = r.category==='zubora' ? 'ズボラ' : 'ちゃんと';
+    const ing = (r.ingredients||[]).map(i=>`<li>${escapeHtml(i)}</li>`).join('');
+    const steps = (r.steps||[]).map(s=>`<li>${escapeHtml(s)}</li>`).join('');
+    return `<div class="recipe-card" id="rc-${r.id}">
+      <div class="rc-head" onclick="toggleRecipe('${r.id}')">
+        <span class="tag ${r.category}">${catLabel}</span>
+        <span class="rc-name">${escapeHtml(r.name)}</span>
+        <span class="rc-arrow">▶</span>
+      </div>
+      <div class="rc-detail">
+        ${ing ? `<h4>材料</h4><ul>${ing}</ul>` : ''}
+        ${steps ? `<h4>作り方</h4><ol>${steps}</ol>` : ''}
+        ${r.memo ? `<h4>メモ</h4><p style="margin:0 0 12px;color:var(--ink-soft);">${escapeHtml(r.memo)}</p>` : ''}
+        <div class="rc-actions">
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); deleteRecipe('${r.id}')">削除</button>
+          <button class="btn ${r.category==='zubora'?'btn-sage':'btn-clay'} btn-sm" onclick="event.stopPropagation(); quickLogFromRecipe('${r.id}')">これで記録する</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleRecipe(id){
+  document.getElementById('rc-'+id).classList.toggle('open');
+}
+function deleteRecipe(id){
+  state.recipes = state.recipes.filter(r=>r.id!==id);
+  saveState();
+  renderRecipes();
+}
+function quickLogFromRecipe(id){
+  const r = state.recipes.find(x=>x.id===id);
+  if(!r) return;
+  state.sessions.push({id:uid(), date:fmtDate(new Date()), type:r.category, name:r.name, memo:''});
+  saveState();
+  showToast(`「${r.name}」を今日の記録に追加しました`);
+  renderHome();
+}
+function openRecipeModal(){
+  showModal(`
+    <h3>レシピを追加</h3>
+    <div class="field">
+      <label>種類</label>
+      <div class="seg" style="margin-bottom:0;">
+        <button type="button" class="active" id="rcCatZubora" onclick="setRcCat('zubora')">ズボラ</button>
+        <button type="button" id="rcCatChanto" onclick="setRcCat('chanto')">ちゃんと</button>
+      </div>
+      <input type="hidden" id="rcCategory" value="zubora">
+    </div>
+    <div class="field"><label>レシピ名</label><input type="text" id="rcName" placeholder="例：鶏そぼろと卵の冷凍弁当"></div>
+    <div class="field"><label>材料（1行に1つ）</label><textarea class="multiline" id="rcIngredients" placeholder="鶏ひき肉 300g&#10;卵 3個&#10;醤油 大さじ2"></textarea></div>
+    <div class="field"><label>作り方（1行に1手順）</label><textarea class="multiline" id="rcSteps" placeholder="鶏ひき肉を炒める&#10;調味料を加えて煮詰める&#10;冷ましてから小分け冷凍"></textarea></div>
+    <div class="field"><label>メモ（任意）</label><textarea class="multiline" id="rcMemo"></textarea></div>
+    <button class="btn btn-primary btn-block" onclick="submitRecipe()">保存する</button>
+  `);
+}
+function setRcCat(cat){
+  document.getElementById('rcCategory').value = cat;
+  document.getElementById('rcCatZubora').classList.toggle('active', cat==='zubora');
+  document.getElementById('rcCatChanto').classList.toggle('active', cat==='chanto');
+}
+function submitRecipe(){
+  const name = document.getElementById('rcName').value.trim();
+  if(!name){ showToast('レシピ名を入力してください'); return; }
+  const category = document.getElementById('rcCategory').value;
+  const ingredients = document.getElementById('rcIngredients').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const steps = document.getElementById('rcSteps').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const memo = document.getElementById('rcMemo').value.trim();
+  addRecipe({name, category, ingredients, steps, memo});
+  closeModal();
+  showToast('レシピを保存しました');
+}
+function addRecipe(r){
+  state.recipes.push({id:uid(), createdAt:new Date().toISOString(), ...r});
+  saveState();
+  renderRecipes();
+}
+
+/* =========================================================
+   MODAL / TOAST helpers
+   ========================================================= */
+function showModal(html){
+  document.getElementById('modalSheet').innerHTML = `
+    <div class="modal-close-row"><button onclick="closeModal()">✕</button></div>
+    ${html}`;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+document.getElementById('modalOverlay').addEventListener('click', e=>{
+  if(e.target.id==='modalOverlay') closeModal();
+});
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+function loadSettingsIntoForm(){
+  document.getElementById('ghToken').value = state.settings.ghToken || '';
+  document.getElementById('ghGistId').value = state.settings.ghGistId || '';
+  document.getElementById('geminiKey').value = state.settings.geminiKey || '';
+  document.getElementById('geminiModel').value = state.settings.geminiModel || 'gemini-2.5-flash';
+}
+function saveApiSettings(){
+  state.settings.ghToken = document.getElementById('ghToken').value.trim();
+  state.settings.ghGistId = document.getElementById('ghGistId').value.trim();
+  state.settings.geminiKey = document.getElementById('geminiKey').value.trim();
+  state.settings.geminiModel = document.getElementById('geminiModel').value.trim() || 'gemini-2.5-flash';
+  saveState();
+  showToast('設定を保存しました');
+}
+// keep token/gistId fields in sync too if user edits then hits gist buttons directly
+function syncGhFieldsToState(){
+  state.settings.ghToken = document.getElementById('ghToken').value.trim();
+  state.settings.ghGistId = document.getElementById('ghGistId').value.trim();
+  saveState();
+}
+function resetAllData(){
+  showModal(`
+    <h3>本当に削除しますか？</h3>
+    <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;">記録・レシピ・設定などすべてのデータが端末から削除されます。この操作は取り消せません。</p>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button class="btn btn-ghost btn-block" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-block" style="background:var(--danger); color:#fff;" onclick="doReset()">削除する</button>
+    </div>
+  `);
+}
+function doReset(){
+  state = defaultState();
+  saveState();
+  closeModal();
+  loadSettingsIntoForm();
+  renderHome();
+  renderStats();
+  renderRecipes();
+  renderChat();
+  showToast('データを削除しました');
+}
+
+/* ---------- Gist sync ---------- */
+async function saveToGist(){
+  syncGhFieldsToState();
+  const {ghToken, ghGistId} = state.settings;
+  const statusEl = document.getElementById('syncStatus');
+  if(!ghToken || !ghGistId){ statusEl.textContent = 'PATとGist IDを入力してください。'; return; }
+  statusEl.textContent = '保存中...';
+  try{
+    const payload = { sessions: state.sessions, recipes: state.recipes };
+    const res = await fetch(`https://api.github.com/gists/${ghGistId}`, {
+      method:'PATCH',
+      headers:{
+        'Authorization': `token ${ghToken}`,
+        'Accept':'application/vnd.github+json',
+        'Content-Type':'application/json'
+      },
+      body: JSON.stringify({ files: { 'sukujitsu-data.json': { content: JSON.stringify(payload, null, 2) } } })
+    });
+    if(!res.ok){ throw new Error(`HTTP ${res.status}`); }
+    statusEl.textContent = `保存しました（${new Date().toLocaleTimeString('ja-JP')}）`;
+  }catch(e){
+    statusEl.textContent = `保存に失敗しました：${e.message}`;
+  }
+}
+async function loadFromGist(){
+  syncGhFieldsToState();
+  const {ghToken, ghGistId} = state.settings;
+  const statusEl = document.getElementById('syncStatus');
+  if(!ghToken || !ghGistId){ statusEl.textContent = 'PATとGist IDを入力してください。'; return; }
+  statusEl.textContent = '読込中...';
+  try{
+    const res = await fetch(`https://api.github.com/gists/${ghGistId}`, {
+      headers:{ 'Authorization': `token ${ghToken}`, 'Accept':'application/vnd.github+json' }
+    });
+    if(!res.ok){ throw new Error(`HTTP ${res.status}`); }
+    const data = await res.json();
+    const file = data.files && data.files['sukujitsu-data.json'];
+    if(!file){ throw new Error('Gist内にデータファイルが見つかりません'); }
+    const parsed = JSON.parse(file.content);
+    state.sessions = parsed.sessions || [];
+    state.recipes = parsed.recipes || [];
+    saveState();
+    renderHome(); renderStats(); renderRecipes();
+    statusEl.textContent = `読み込みました（${new Date().toLocaleTimeString('ja-JP')}）`;
+  }catch(e){
+    statusEl.textContent = `読込に失敗しました：${e.message}`;
+  }
+}
+
+/* =========================================================
+   AI: Gemini chat + recipe generation
+   ========================================================= */
+function renderChat(){
+  const win = document.getElementById('chatWindow');
+  if(state.chatHistory.length===0){
+    win.innerHTML = `<div class="bubble ai">こんにちは！今日の気分や余っている食材を教えてください。ズボラ向け／ちゃんと向け、どちらの提案も可能です。</div>`;
+    return;
+  }
+  win.innerHTML = state.chatHistory.map(m=>
+    `<div class="bubble ${m.role==='user'?'user':'ai'}">${escapeHtml(m.text)}</div>`
+  ).join('');
+  win.scrollTop = win.scrollHeight;
+}
+async function callGemini(promptText, historyForContext){
+  const key = state.settings.geminiKey;
+  const model = state.settings.geminiModel || 'gemini-2.5-flash';
+  if(!key) throw new Error('設定タブでGemini APIキーを登録してください');
+  const contents = (historyForContext||[]).map(m=>({
+    role: m.role==='user' ? 'user' : 'model',
+    parts:[{text:m.text}]
+  }));
+  contents.push({role:'user', parts:[{text:promptText}]});
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ contents })
+  });
+  if(!res.ok){
+    const errBody = await res.text().catch(()=> '');
+    throw new Error(`API ${res.status} ${errBody.slice(0,120)}`);
+  }
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.map(p=>p.text).join('') || '(応答がありませんでした)';
+  return text;
+}
+async function sendChat(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  state.chatHistory.push({role:'user', text});
+  saveState();
+  renderChat();
+  const win = document.getElementById('chatWindow');
+  win.insertAdjacentHTML('beforeend', `<div class="bubble ai loading" id="chatLoading">考え中...</div>`);
+  win.scrollTop = win.scrollHeight;
+  try{
+    const prompt = `あなたは一人暮らしの自炊をサポートするアシスタントです。「ズボラ自炊（冷凍作り置き向け、手数少なめ）」または「ちゃんとした料理（スキルアップ向け）」の観点でレシピや献立を、簡潔な日本語で提案してください。\n\nユーザーの相談：${text}`;
+    const reply = await callGemini(prompt, state.chatHistory.slice(0,-1));
+    state.chatHistory.push({role:'model', text:reply});
+    saveState();
+  }catch(e){
+    state.chatHistory.push({role:'model', text:`エラー：${e.message}`});
+  }
+  renderChat();
+}
+
+async function generateRecipe(){
+  const input = document.getElementById('genInput');
+  const text = input.value.trim();
+  const resultEl = document.getElementById('genResult');
+  if(!text){ showToast('食材やキーワードを入力してください'); return; }
+  resultEl.innerHTML = `<p class="ai-sub">生成中...</p>`;
+  try{
+    const prompt = `次の食材・条件をもとに、一人暮らしの自炊向けレシピを1つ考えてください。\n出力は必ず次のJSON形式のみとし、説明文やマークダウンのコードブロックは付けないでください。\n{"name":"レシピ名","category":"zubora または chanto","ingredients":["材料1","材料2"],"steps":["手順1","手順2"]}\n\ncategoryは、冷凍作り置き向けの簡単なものなら"zubora"、新しい挑戦や手の込んだものなら"chanto"としてください。\n\n食材・条件：${text}`;
+    const raw = await callGemini(prompt, []);
+    const cleaned = raw.replace(/```json|```/g,'').trim();
+    const recipe = JSON.parse(cleaned);
+    const catLabel = recipe.category==='chanto' ? 'ちゃんと' : 'ズボラ';
+    resultEl.innerHTML = `
+      <div class="gen-preview">
+        <h4>${escapeHtml(recipe.name)}（${catLabel}）</h4>
+        <div style="font-size:13px;">
+          ${recipe.ingredients?.length ? `<b>材料</b><ul style="margin:4px 0 10px;padding-left:18px;">${recipe.ingredients.map(i=>`<li>${escapeHtml(i)}</li>`).join('')}</ul>` : ''}
+          ${recipe.steps?.length ? `<b>作り方</b><ol style="margin:4px 0 10px;padding-left:18px;">${recipe.steps.map(s=>`<li>${escapeHtml(s)}</li>`).join('')}</ol>` : ''}
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('genResult').innerHTML='';">閉じる</button>
+          <button class="btn btn-sage btn-sm" onclick='registerGeneratedRecipe(${JSON.stringify(JSON.stringify(recipe))})'>レシピ帳に登録</button>
+        </div>
+      </div>`;
+  }catch(e){
+    resultEl.innerHTML = `<p class="ai-sub" style="color:var(--danger);">生成に失敗しました：${escapeHtml(e.message)}</p>`;
+  }
+}
+function registerGeneratedRecipe(jsonStr){
+  try{
+    const recipe = JSON.parse(jsonStr);
+    const category = recipe.category==='chanto' ? 'chanto' : 'zubora';
+    addRecipe({
+      name: recipe.name || '名称未設定レシピ',
+      category,
+      ingredients: recipe.ingredients || [],
+      steps: recipe.steps || [],
+      memo: 'AI生成レシピ'
+    });
+    document.getElementById('genResult').innerHTML = '';
+    document.getElementById('genInput').value = '';
+    showToast('レシピ帳に登録しました');
+  }catch(e){
+    showToast('登録に失敗しました');
+  }
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+loadSettingsIntoForm();
+renderHome();
+</script>
+</body>
+</html>
